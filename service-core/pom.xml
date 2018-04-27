@@ -11,18 +11,18 @@
     </parent>
 
     <artifactId>service-core</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>${parent.version}</version>
 
 
     <dependencies>
         <dependency>
-            <groupId>org.apache.spark</groupId>
-            <artifactId>spark-streaming-kafka-0-10_${scala.binary.version}</artifactId>
+            <groupId>git.wpy.service</groupId>
+            <artifactId>service-api</artifactId>
+            <version>${parent.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.spark</groupId>
-            <artifactId>spark-sql_${scala.binary.version}</artifactId>
-            <version>${spark.version}</version>
+            <artifactId>spark-streaming-kafka-0-10_${scala.binary.version}</artifactId>
         </dependency>
         <dependency>
             <groupId>org.apache.spark</groupId>
@@ -40,5 +40,25 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
-    
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.scala-tools</groupId>
+                <artifactId>maven-scala-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
 </project>
