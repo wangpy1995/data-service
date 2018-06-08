@@ -14,7 +14,7 @@ class WriterTestSuite extends FunSuite {
 
   val ss = SparkSession.builder().config(sparkConf).getOrCreate()
 
-  val path = "/home/wpy/tmp/parquet"
+  val path = "/home/wangpengyu6/tmp/parquet"
 
   test("write") {
     /**
@@ -67,7 +67,7 @@ class WriterTestSuite extends FunSuite {
 
     val df = ss.createDataFrame(rdd, schema)
 
-    df.coalesce(8).write.mode(SaveMode.Overwrite).parquet(path)
+    df.coalesce(4).write.mode(SaveMode.Append).parquet(path)
 
     df.show()
 
@@ -77,7 +77,7 @@ class WriterTestSuite extends FunSuite {
   test("read") {
     ss.read.parquet(path).createOrReplaceTempView("TEMP")
 
-    val res = ss.sql("select count(*) from TEMP where score>9999999 and class_grade.math>100").count()
+    val res = ss.sql("select * from TEMP where id = 9999999")show()
 
     println(res)
     //    println(res.mkString(", "))
