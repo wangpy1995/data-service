@@ -14,7 +14,8 @@ class WriterTestSuite extends FunSuite {
 
   val ss = SparkSession.builder().config(sparkConf).getOrCreate()
 
-  val path = "/home/wangpengyu6/tmp/parquet"
+  //  val path = "/home/wangpengyu6/tmp/parquet"
+  val path = "hdfs://10.3.67.122:8020/sec/idx/SNAP_IMAGE_INFO"
 
   test("write") {
     /**
@@ -76,10 +77,10 @@ class WriterTestSuite extends FunSuite {
 
   test("read") {
     ss.read.parquet(path).createOrReplaceTempView("TEMP")
+    ss.sql("select * from TEMP where face_time>=1525017600000 and face_time<1528560000000").show()
+    //    val res = ss.sql("select * from TEMP where id = 9999999")show()
+    //    println(res)
 
-    val res = ss.sql("select * from TEMP where id = 9999999")show()
-
-    println(res)
     //    println(res.mkString(", "))
     Console.readLine()
   }

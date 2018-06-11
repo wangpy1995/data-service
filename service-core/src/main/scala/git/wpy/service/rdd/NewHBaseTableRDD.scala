@@ -17,8 +17,8 @@ class NewHBaseTableRDD(sc: SparkContext, hbaseConf: Configuration)
     classOf[TableInputFormat],
     classOf[ImmutableBytesWritable],
     classOf[Result],
-    hbaseConf
-  ) {
+    hbaseConf) {
+
   val credentialUtil = new HBaseCredentialUtil(sc, hbaseConf)
 
   override def compute(theSplit: Partition, context: TaskContext) = {
@@ -37,17 +37,17 @@ class HBaseCredentialUtil(@transient sc: SparkContext,
   val credentialsConf = sc.broadcast(new SerializableWritable(job.getCredentials))
 
   def applyCredentials() = {
-    credentials = null
-
     logDebug("appliedCredentials:" + appliedCredentials + ",credentials:" + credentials)
-    if (!appliedCredentials && credentials != null)
-      appliedCredentials = true
-
     @transient val ugi = UserGroupInformation.getCurrentUser
-    ugi.addCredentials(credentials)
-    // specify that this is a proxy user
-    ugi.setAuthenticationMethod(AuthenticationMethod.PROXY)
+    if (!appliedCredentials && credentials != null) {
+      appliedCredentials = true
+      ugi.addCredentials(credentials)
+    } else {
+      credentials = credentialsConf.value.value
+      // specify that this is a proxy user
+      ugi.setAuthenticationMethod(AuthenticationMethod.PROXY)
 
-    ugi.addCredentials(credentialsConf.value.value)
+      ugi.addCredentials(credentialsConf.value.value)
+    }
   }
 }

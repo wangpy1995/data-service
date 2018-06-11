@@ -1,0 +1,26 @@
+- !!git.wpy.bean.ColumnFamily
+  name: '0'
+  qualifierList:
+  - {dataType: xxx, name: '0'}
+  - {dataType: xxx, name: '1'}
+  - {dataType: xxx, name: '2'}
+  - {dataType: xxx, name: '3'}
+  - {dataType: xxx, name: '4'}
+  - {dataType: xxx, name: '5'}
+  - {dataType: xxx, name: '6'}
+  - {dataType: xxx, name: '7'}
+  - {dataType: xxx, name: '8'}
+  - {dataType: xxx, name: '9'}
+- !!git.wpy.bean.ColumnFamily
+  name: '1'
+  qualifierList:
+  - {dataType: xxx, name: '0'}
+  - {dataType: xxx, name: '1'}
+  - {dataType: xxx, name: '2'}
+  - {dataType: xxx, name: '3'}
+  - {dataType: xxx, name: '4'}
+  - {dataType: xxx, name: '5'}
+  - {dataType: xxx, name: '6'}
+  - {dataType: xxx, name: '7'}
+  - {dataType: xxx, name: '8'}
+  - {dataType: xxx, name: '9'}
