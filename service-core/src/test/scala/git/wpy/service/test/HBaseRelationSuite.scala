@@ -1,5 +1,6 @@
 package git.wpy.service.test
 
+import git.wpy.service.{HBaseStrategy, HBaseTableScanExec}
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.{SparkConf, SparkContext}
 import org.scalatest.FunSuite
@@ -13,6 +14,7 @@ class HBaseRelationSuite extends FunSuite {
 
   test("relation") {
     val ss = SparkSession.builder().config(sparkConf).getOrCreate()
+    ss.experimental.extraStrategies = Seq(HBaseStrategy)
     ss.sql(
       """
         |CREATE TEMPORARY VIEW test_table

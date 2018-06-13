@@ -13,7 +13,7 @@ public class LoaderCreatorTest {
 
     public static void main(String[] args) throws IOException, ClassNotFoundException {
         B b = new B();
-        A a = (A)b;
+        A a = (A) b;
 
         URL file = b.getClass().getResource("/clz");
 //        OutputStream out =  new FileOutputStream(file.getFile());
@@ -24,7 +24,13 @@ public class LoaderCreatorTest {
 //        output.close();
 
         ObjectInputStream input = new ObjectInputStream(new FileInputStream(file.getFile()));
-        A a0 = (A)input.readObject();
+        A a0 = (A) input.readObject();
         System.out.println(a0.getClass().getName());
     }
+}
+
+class A {
+}
+
+class B extends A {
 }
