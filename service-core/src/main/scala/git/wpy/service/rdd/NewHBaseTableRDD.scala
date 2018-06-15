@@ -1,5 +1,6 @@
 package git.wpy.service.rdd
 
+import git.wpy.format.SplitableTableInputFormat
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.hbase.client.Result
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable

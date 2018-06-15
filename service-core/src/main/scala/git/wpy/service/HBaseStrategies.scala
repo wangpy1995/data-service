@@ -1,12 +1,14 @@
 package git.wpy.service
 
+import java.util
+
 import git.wpy.service.rdd.NewHBaseTableRDD
 import git.wpy.service.relation.{HBaseColumn, HBaseRelation}
 import org.apache.hadoop.hbase.client.{Result, Scan}
 import org.apache.hadoop.hbase.filter.CompareFilter.CompareOp
 import org.apache.hadoop.hbase.filter._
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable
-import org.apache.hadoop.hbase.mapreduce.{IdentityTableMapper, TableMapReduceUtil}
+import org.apache.hadoop.hbase.mapreduce.{IdentityTableMapper, TableInputFormat, TableInputFormatBase, TableMapReduceUtil}
 import org.apache.hadoop.hbase.util.Bytes
 import org.apache.hadoop.mapreduce.Job
 import org.apache.spark.rdd.RDD
@@ -20,6 +22,8 @@ import org.apache.spark.sql.execution.metric.SQLMetrics
 import org.apache.spark.sql.execution.{LeafExecNode, ProjectExec, SparkPlan}
 import org.apache.spark.sql.types._
 import org.apache.spark.unsafe.types.UTF8String
+
+import scala.annotation.meta.param
 
 object HBaseStrategy extends Strategy {
   override def apply(plan: LogicalPlan): Seq[SparkPlan] = plan match {
@@ -44,23 +48,36 @@ object HBaseStrategy extends Strategy {
 
     if (projectList.map(_.toAttribute) == projectList && projectSet.size == projectList.size && filterSet.subsetOf(projectSet)) {
       val requestedColumns = projectList.asInstanceOf[Seq[Attribute]].map(attributeMap)
-      HBaseTableScanExec(relation.columnFamilies, requestedColumns, relation, filters)
+      HBaseTableScanExec(requestedColumns, relation, filters)
     } else {
       //val requestedColumns = projectSet.map(relation.attributeMap ).toSeq
       val requestedColumns = attributeMap.keySet.toSeq
-      val scan = HBaseTableScanExec(relation.columnFamilies, requestedColumns, relation, filters)
+      val scan = HBaseTableScanExec(requestedColumns, relation, filters)
       ProjectExec(projectList, scan)
     }
   }
 }
 
 case class HBaseTableScanExec(
-                               columnFamilies: Seq[HBaseColumn],
                                requestedAttributes: Seq[Attribute],
-                               relation: HBaseRelation,
+                               @(transient@param) relation: HBaseRelation,
                                filter: Seq[Expression])
   extends LeafExecNode {
-  val tableName = relation.tableName
+  private val tableName = relation.tableName
+  private val startRow = relation.startRow
+  private val stopRow = relation.stopRow
+  @transient private val hConf = relation.conf
+
+  @transient private val columnFamilies = relation.columnFamilies
+
+  @transient private val requiredColumns = schema.map { field =>
+    if (field.name == "rowKey") HBaseColumn(null, "rowKey", StringType)
+    else columnFamilies.find(_.qualifier == field.name).get
+  }
+
+  private val cols = requiredColumns.map { field =>
+    (field.family, Bytes.toBytes(field.qualifier), genHBaseFieldConverter(field.dataType))
+  }
 
   override def output: Seq[Attribute] = requestedAttributes
 
@@ -72,24 +89,28 @@ case class HBaseTableScanExec(
 
   override protected def doExecute(): RDD[InternalRow] = {
 
-    val scan = new Scan().withStartRow(relation.startRow).withStopRow(relation.stopRow, true)
+    val scan = new Scan().withStartRow(startRow).withStopRow(stopRow, true)
     val numOutputRows = longMetric("numOutputRows")
     val hbaseFilter = buildHBaseFilterList4Where(filter.headOption)
     addColumnFamiliesToScan(scan, hbaseFilter, filter.headOption, requestedAttributes)
-    val cols = columnFamilies.map { field =>
-      (field.family, Bytes.toBytes(field.qualifier), genHBaseFieldConverter(field.dataType))
-    }
-    val job = Job.getInstance(relation.conf)
-    TableMapReduceUtil.initTableMapperJob(tableName, scan, classOf[IdentityTableMapper], classOf[ImmutableBytesWritable], classOf[Result], job)
 
+    if (schema.isEmpty || (schema.length == 1 && schema.head.name == "rowKey"))
+      scan.setFilter(new FirstKeyOnlyFilter())
+
+    val job = Job.getInstance(hConf)
+    TableMapReduceUtil.initTableMapperJob(tableName, scan, classOf[IdentityTableMapper], classOf[ImmutableBytesWritable], classOf[Result], job)
+    job.getConfiguration.setBoolean(TableInputFormatBase.MAPREDUCE_INPUT_AUTOBALANCE, true)
+    job.getConfiguration.setLong(TableInputFormatBase.MAX_AVERAGE_REGION_SIZE, 1L * 107374180)
+    //    job.getConfiguration.setInt(TableInputFormatBase.NUM_MAPPERS_PER_REGION,4)
     new NewHBaseTableRDD(sqlContext.sparkContext, job.getConfiguration).mapPartitionsWithIndex { (index, iter) =>
       val proj = UnsafeProjection.create(schema)
       proj.initialize(index)
       val size = schema.length
       iter.map { result =>
-        val r = hbase2SparkRow(result._2, size, cols)
+        val internalRow = new GenericInternalRow(size)
+        hbase2SparkRow(result._2, internalRow, cols)
         numOutputRows += 1
-        proj(r)
+        proj(internalRow)
       }
     }
   }
@@ -125,26 +146,20 @@ case class HBaseTableScanExec(
       (internalRow, i, v) => internalRow.update(i, v)
   }
 
-  def hbase2SparkRow(result: Result, size: Int, cols: Seq[CF_QUALIFIER_CONVERTER]): InternalRow = {
+  def hbase2SparkRow(result: Result, internalRow: InternalRow, cols: Seq[CF_QUALIFIER_CONVERTER]): Unit = {
     var i = 0
-    val internalRow = new GenericInternalRow(size)
     cols.foreach { case (family, qualifier, convert) =>
-      val v = result.getValue(family, qualifier)
-
+      val v = if (family == null) result.getRow
+      else result.getValue(family, qualifier)
       if (v == null) internalRow.setNullAt(i)
       else convert(internalRow, i, v)
       i += 1
     }
-    internalRow
   }
 
   //columnFamily_QualifierName <=== requestAttribute
   def addColumnFamiliesToScan(scan: Scan, filters: Option[Filter], predicate: Option[Expression], projectionList: Seq[NamedExpression]): Scan = {
-    requestedAttributes.foreach { qualifier =>
-      val column_qualifier = qualifier.name.split("_", 2)
-      if (qualifier.name != "row_key")
-        scan.addColumn(column_qualifier.head.getBytes, column_qualifier.last.getBytes)
-    }
+    cols.foreach(cf => if (cf._1 != null) scan.addColumn(cf._1, cf._2))
     scan.setCaching(1000)
     scan.setCacheBlocks(false)
     if (filters.isDefined) {
@@ -154,68 +169,57 @@ case class HBaseTableScanExec(
   }
 
 
-  private def add2FilterList(filters: java.util.ArrayList[Filter], filtersToBeAdded: Option[FilterList], operator: FilterList.Operator) = {
-    import collection.JavaConverters._
-    if (filtersToBeAdded.isDefined) {
-      val filterList = filtersToBeAdded.get
+  private def add2FilterList(filters: java.util.ArrayList[Filter], filtersToBeAdded: Option[FilterList], operator: FilterList.Operator) = filtersToBeAdded match {
+    case Some(filterList) =>
+      import collection.JavaConverters._
       val size = filterList.getFilters.size
       if (size == 1 || filterList.getOperator == operator) {
         filterList.getFilters.asScala.map(filters.add)
-      }
-      else {
-        filters.add(filterList)
-      }
-    }
+      } else filters.add(filterList)
+    case None => {}
   }
 
   def createNullFilter(left: AttributeReference): Option[FilterList] = {
-    val Column = requestedAttributes.find(_.name == left.name)
-    if (Column.isDefined) {
-      val col_qualifier = Column.get.name.split("_", 2)
-      val filter = new SingleColumnValueFilter(Bytes.toBytes(col_qualifier.head), Bytes.toBytes(col_qualifier.last), CompareOp.EQUAL, new NullComparator())
-      filter.setFilterIfMissing(true)
-      Some(new FilterList(filter))
-    }
-    else {
-      None
+    requiredColumns.find(_.qualifier == left.name) match {
+      case Some(cf) =>
+        val filter = new SingleColumnValueFilter(cf.family, Bytes.toBytes(cf.qualifier), CompareOp.EQUAL, new NullComparator())
+        filter.setFilterIfMissing(true)
+        Some(new FilterList(filter))
+      case None => None
     }
   }
 
   def createNotNullFilter(left: AttributeReference): Option[FilterList] = {
-    val Column = requestedAttributes.find(_.name == left.name)
-    if (Column.isDefined) {
-      val col_qualifier = Column.get.name.split("_", 2)
-      val filter = new SingleColumnValueFilter(Bytes.toBytes(col_qualifier.head), Bytes.toBytes(col_qualifier.last), CompareOp.NOT_EQUAL, new NullComparator())
-      filter.setFilterIfMissing(true)
-      Some(new FilterList(filter))
-    }
-    else {
-      None
+    requiredColumns.find(_.qualifier == left.name) match {
+      case Some(cf) =>
+        val filter = new SingleColumnValueFilter(cf.family, Bytes.toBytes(cf.qualifier), CompareOp.NOT_EQUAL, new NullComparator())
+        filter.setFilterIfMissing(true)
+        Some(new FilterList(filter))
+      case None => None
     }
   }
 
-  private def getBinaryValue(literal: Literal): Array[Byte] = {
-    literal.dataType match {
-      case BooleanType => Bytes.toBytes(literal.value.asInstanceOf[Boolean])
-      case ByteType => Bytes.toBytes(literal.value.asInstanceOf[Byte])
-      case ShortType => Bytes.toBytes(literal.value.asInstanceOf[Short])
-      case IntegerType => Bytes.toBytes(literal.value.asInstanceOf[Int])
-      case LongType => Bytes.toBytes(literal.value.asInstanceOf[Long])
-      case FloatType => Bytes.toBytes(literal.value.asInstanceOf[Float])
-      case DoubleType => Bytes.toBytes(literal.value.asInstanceOf[Double])
-      case StringType => UTF8String.fromString(literal.value.toString).getBytes
-    }
+  private def getBinaryValue(literal: Literal): Array[Byte] = literal.dataType match {
+    case BooleanType => Bytes.toBytes(literal.value.asInstanceOf[Boolean])
+    case ByteType => Bytes.toBytes(literal.value.asInstanceOf[Byte])
+    case ShortType => Bytes.toBytes(literal.value.asInstanceOf[Short])
+    case IntegerType => Bytes.toBytes(literal.value.asInstanceOf[Int])
+    case LongType => Bytes.toBytes(literal.value.asInstanceOf[Long])
+    case FloatType => Bytes.toBytes(literal.value.asInstanceOf[Float])
+    case DoubleType => Bytes.toBytes(literal.value.asInstanceOf[Double])
+    case StringType => UTF8String.fromString(literal.value.toString).getBytes
   }
+
 
   def createSingleColumnValueFilter(left: AttributeReference, right: Literal, compareOp: CompareOp, comparable: ByteArrayComparable = null): Option[FilterList] = {
-    val nonKeyColumn = requestedAttributes.find(_.name == left.name)
+    val nonKeyColumn = requiredColumns.find(_.qualifier == left.name)
 
     if (nonKeyColumn.isDefined) {
-      val column = nonKeyColumn.get.name.split("_", 2)
+      val cf = nonKeyColumn.get
       val nullComparable = comparable == null
 
-      var filter = new SingleColumnValueFilter(Bytes.toBytes(column.head), Bytes.toBytes(column.last), compareOp, new BinaryComparator(getBinaryValue(right)))
-      val filter1 = new SingleColumnValueFilter(Bytes.toBytes(column.head), Bytes.toBytes(column.last), compareOp, comparable)
+      var filter = new SingleColumnValueFilter(cf.family, Bytes.toBytes(cf.qualifier), compareOp, new BinaryComparator(getBinaryValue(right)))
+      val filter1 = new SingleColumnValueFilter(cf.family, Bytes.toBytes(cf.qualifier), compareOp, comparable)
 
       if (!nullComparable) filter = filter1
 
@@ -260,13 +264,13 @@ case class HBaseTableScanExec(
           Some(new FilterList(FilterList.Operator.MUST_PASS_ONE, filters))
 
         case InSet(value@AttributeReference(name, dataType, _, _), hset) =>
-          val column = requestedAttributes.find(_.name == name)
+          val column = requiredColumns.find(_.qualifier == name)
           if (column.isDefined) {
-            val col_qualifier = column.get.name.split("_", 2)
+            val cf = column.get
             val filterList = new FilterList(FilterList.Operator.MUST_PASS_ONE)
             for (item <- hset) {
               val filter = new SingleColumnValueFilter(
-                Bytes.toBytes(col_qualifier.head), Bytes.toBytes(col_qualifier.last), CompareOp.EQUAL,
+                cf.family, Bytes.toBytes(cf.qualifier), CompareOp.EQUAL,
                 new BinaryComparator(Bytes.toBytes(item.asInstanceOf[String])))
               filterList.addFilter(filter)
             }

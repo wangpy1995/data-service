@@ -24,26 +24,27 @@ class HBaseRelationProvider extends RelationProvider with DataSourceRegister {
     val stopRow = Bytes.toBytes(parameters.getOrElse("stopRow", ""))
     // ++ Array(Byte.MaxValue)
     val schemaFile = parameters("schemaPath")
-    val columnFamilies = HBaseConstants.createColumnFamilies(schemaFile)
-    HBaseRelation(sqlContext, columnFamilies, HBaseConstants.conf, tableName, startRow, stopRow)
+    HBaseRelation(sqlContext, schemaFile, HBaseConstants.conf, tableName, startRow, stopRow)
   }
 
   override def shortName(): String = "hbase"
 }
 
 case class HBaseRelation(sqlContext: SQLContext,
-                         columnFamilies: Seq[HBaseColumn],
-                         conf: Configuration,
+                         schemaFile: String,
+                         @transient conf: Configuration,
                          tableName: String,
                          startRow: Array[Byte],
                          stopRow: Array[Byte]
                         ) extends BaseRelation {
+  val columnFamilies = HBaseConstants.createColumnFamilies(schemaFile)
 
-  override def schema: StructType = StructType(columnFamilies.map(col => StructField(col.qualifier, col.dataType)))
+  override def schema: StructType = StructType(Seq(StructField("rowKey", StringType)) ++ columnFamilies.map(col => StructField(col.qualifier, col.dataType)))
 }
 
 object HBaseConstants {
 
+  val ROWKEY = Bytes.toBytes("rowKey")
   val INFO = Bytes.toBytes("info")
   val modelKey = "model"
   val MODEL = Bytes.toBytes("model")
