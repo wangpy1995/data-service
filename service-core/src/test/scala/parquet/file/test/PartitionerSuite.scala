@@ -19,10 +19,11 @@ class PartitionerSuite extends FunSuite {
     calendar.set(2018, 4, 22)
     val start = calendar.getTimeInMillis
     val duration = stop - start
-//    val data = (0 until 1000000) map (_ => (start + Random.nextDouble() * duration).toLong)
+    //    val data = (0 until 1000000) map (_ => (start + Random.nextDouble() * duration).toLong)
 
     val step = 3L * 24 * 3600 * 1000
-    val arr = (0 until 13) map (start + step * _) toArray
+    val len = (duration / step).toInt + 1
+    val arr = (0 until len) map (start + step * _) toArray
     val numPartitions = 3
     val partitioner = new NumberRangePartitioner(arr, numPartitions, step)
 
@@ -30,11 +31,13 @@ class PartitionerSuite extends FunSuite {
       (0 until 500000) map (_ => (start + Random.nextDouble() * duration).toLong) map (v => v -> v) iterator
     }.partitionBy(partitioner).values
     val parts = partitionedRDD.partitions
-    val rdds = arr.indices.map(i => new PartialRDD(partitionedRDD, parts, i * numPartitions, numPartitions).cache())
-    val seq = rdds.map { r =>
-      r.partitions
+    val rdds = (0 until len).map(i => new PartialRDD(partitionedRDD, parts, i * numPartitions, numPartitions).cache())
+    rdds.foreach { rdd =>
+      println(rdd.count())
+      println("=================")
     }
-    rdds.foreach { rdd => println(rdd.count()); println("=================") }
+
+    0 until 50 foreach (_ => println(rdds(Random.nextInt(len)).count()))
 
     StdIn.readLine()
   }

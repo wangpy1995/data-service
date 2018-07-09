@@ -1,9 +1,11 @@
 package git.wpy.service.proxy;
 
 import git.wpy.service.annotation.LoaderCreator;
-import org.apache.hadoop.hbase.util.Bytes;
+//import org.apache.hadoop.hbase.util.Bytes;
 
-import java.io.*;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.net.URL;
 
 @LoaderCreator(loaderType = "nothing")
@@ -20,14 +22,15 @@ public class LoaderCreatorTest {
         byte[] x = {'2', '0', '1', '8', '0', '3', '1', '1', '1', '1'};
         byte[] y = {'2', '0', '1', '8', '0', '6', '3', '1', '1', '1', '4', '5'};
 
-        byte[][] res = Bytes.split(x, y, true, 5);
+//        byte[][] res = Bytes.split(x, y, true, 5);
+        byte[][] res = new byte[2][5];
         int len = x.length < y.length ? x.length : y.length;
         for (int i = 0; i < len; i++) {
 
         }
 
         for (int i = 0; i < res.length; i++) {
-            System.out.println(Bytes.toString(res[i]));
+//            System.out.println(Bytes.toString(res[i]));
         }
         System.exit(0);
         URL file = b.getClass().getResource("/clz");
