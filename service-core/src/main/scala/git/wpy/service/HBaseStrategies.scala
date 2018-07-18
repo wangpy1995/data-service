@@ -1,14 +1,12 @@
 package git.wpy.service
 
-import java.util
-
 import git.wpy.service.rdd.NewHBaseTableRDD
 import git.wpy.service.relation.{HBaseColumn, HBaseRelation}
 import org.apache.hadoop.hbase.client.{Result, Scan}
 import org.apache.hadoop.hbase.filter.CompareFilter.CompareOp
 import org.apache.hadoop.hbase.filter._
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable
-import org.apache.hadoop.hbase.mapreduce.{IdentityTableMapper, TableInputFormat, TableInputFormatBase, TableMapReduceUtil}
+import org.apache.hadoop.hbase.mapreduce.{IdentityTableMapper, TableInputFormatBase, TableMapReduceUtil}
 import org.apache.hadoop.hbase.util.Bytes
 import org.apache.hadoop.mapreduce.Job
 import org.apache.spark.rdd.RDD

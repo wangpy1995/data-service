@@ -1,0 +1,102 @@
+#Map<List<String,Map<String,String>>>
+- family: info   
+  - name: device_id
+    dataType: STRING
+  - name: device_channel
+    dataType: INT
+  - name: device_name
+    dataType: STRING
+  - name: trace_uuid
+    dataType: STRING
+  - name: face_time
+    dataType: LONG
+  - name: glass
+    dataType: INT
+  - name: sex
+    dataType: INT
+  - name: age_range
+    dataType: INT
+  - name: bkg_url
+    dataType: STRING
+  - name: face_url
+    dataType: STRING
+  - name: face_rect
+    dataType: STRING
+  - name: rect
+    dataType: STRING
+  - name: ethnic
+    dataType: INT
+  - name: smile
+    dataType: INT
+  - name: classifier
+    dataType: INT
+  - name: human_name
+    dataType: STRING
+  - name: birth_date
+    dataType: STRING
+  - name: human_crednum
+    dataType: STRING
+  - name: human_male
+    dataType: INT
+  - name: human_male_value
+    dataType: STRING
+  - name: human_nation
+    dataType: INT
+  - name: human_nation_value
+    dataType: STRING
+  - name: human_address
+    dataType: STRING
+  - name: matchResult
+    dataType: INT
+  - name: face_iqa
+    dataType: STRING
+  - name: detect_quality
+    dataType: INT
+  - name: points_quality
+    dataType: FLOAT
+  - name: eye_distance
+    dataType: FLOAT
+  - name: colorful
+    dataType: FLOAT
+  - name: gray_scale
+    dataType: INT
+  - name: gray_mean
+    dataType: FLOAT
+  - name: gray_var
+    dataType: FLOAT
+  - name: clearity
+    dataType: FLOAT
+  - name: pose_pitch
+    dataType: FLOAT
+  - name: pose_yaw
+    dataType: FLOAT
+  - name: pose_roll
+    dataType: FLOAT
+  - name: pose_conf
+    dataType: FLOAT
+  - name: frontal
+    dataType: FLOAT
+  - name: uncovered
+    dataType: FLOAT
+  - name: total_quality
+    dataType: FLOAT
+  - name: link_face_body_id
+    dataType: STRING
+  - name: link_face_vehicle_id
+    dataType: STRING
+  - name: link_face_mac_id
+    dataType: STRING
+  - name: plate_no
+    dataType: STRING
+  - name: res_num1
+    dataType: INT
+  - name: res_num2
+    dataType: INT
+  - name: res_str3
+    dataType: STRING
+  - name: res_str4
+    dataType: STRING
+
+- family: model
+  - name: model
+    dataType: BINARY

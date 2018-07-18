@@ -3,7 +3,7 @@ package git.wpy.service.test.fsm
 import java.util.concurrent.Executors
 
 class Task(id: String) extends Runnable {
-  var state: State = null
+//  var state: State = null
 
   override def run(): Unit = {
     println("cs: RUNNING; ns: FINISH")

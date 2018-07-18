@@ -24,7 +24,7 @@ public class ColumnFamily {
         this.qualifierList = qualifierList;
     }
 
-    static {
+    /*static {
         InputStream in = ColumnFamily.class.getResourceAsStream("/xx");
         try {
             System.out.println("init name.");
@@ -41,7 +41,7 @@ public class ColumnFamily {
                 e.printStackTrace();
             }
         }
-    }
+    }*/
 
     public static void main(String[] args) {
         System.out.println("00000000000000");

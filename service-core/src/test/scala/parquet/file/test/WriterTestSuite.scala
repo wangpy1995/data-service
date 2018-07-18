@@ -1,10 +1,12 @@
 package parquet.file.test
 
 import org.apache.spark.SparkConf
-import org.apache.spark.sql.{Row, SaveMode, SparkSession, types}
+import org.apache.spark.sql._
+import org.apache.spark.sql.catalyst.plans.physical.RangePartitioning
 import org.apache.spark.sql.types._
 import org.scalatest.FunSuite
 
+import scala.io.StdIn
 import scala.util.Random
 
 class WriterTestSuite extends FunSuite {
@@ -14,8 +16,8 @@ class WriterTestSuite extends FunSuite {
 
   val ss = SparkSession.builder().config(sparkConf).getOrCreate()
 
-  //  val path = "/home/wangpengyu6/tmp/parquet"
-  val path = "hdfs://10.3.67.122:8020/sec/idx/SNAP_IMAGE_INFO"
+  val path = "/home/wangpengyu6/tmp/parquet"
+  //  val path = "hdfs://10.3.67.122:8020/sec/idx/SNAP_IMAGE_INFO"
 
   test("write") {
     /**
@@ -44,8 +46,8 @@ class WriterTestSuite extends FunSuite {
     val food = Array("meat", "fish", "beef", "noodle", "rice", "bread", "bun", "dumpling")
     val fruit = Array("orange", "apple", "pineapple", "pear", "banana", "grape", "pitaya")
 
-    val rdd = ss.sparkContext.parallelize(0 until 100000000).map { i =>
-      val id = i
+    val rdd = ss.sparkContext.parallelize(0 until 1000).map { i =>
+      val id = i % 1000
       val class_grade = Map(
         "literature" -> Random.nextInt(150),
         "math" -> Random.nextInt(150),
@@ -68,9 +70,9 @@ class WriterTestSuite extends FunSuite {
 
     val df = ss.createDataFrame(rdd, schema)
 
-    df.coalesce(4).write.mode(SaveMode.Append).parquet(path)
+    df.repartition(new Column("id")).write.partitionBy("id").mode(SaveMode.Overwrite).parquet(path)
 
-    df.show()
+    println(df.count())
 
   }
 
@@ -83,6 +85,26 @@ class WriterTestSuite extends FunSuite {
 
     //    println(res.mkString(", "))
     Console.readLine()
+  }
+
+  test("repartition") {
+    println(ss.sparkContext.parallelize(Seq(1, 2, 3, 4, 5, 6)).repartition(5).repartition(3).count())
+    StdIn.readLine()
+  }
+
+  test("cols") {
+    val df = ss.read.parquet("hdfs://10.3.66.106:8020/sec/idx/SNAP_IMAGE_INFO")
+    df.createOrReplaceTempView("TEMP")
+
+    //    println(ss.sql("select rowKey,device_id,face_time,face_url from TEMP where rowKey='201807935_4db2d4ff111a4e51bfcb6b404ab70586_1_477_1'").collect().mkString("\n"))
+    //    println(ss.sql("select * from TEMP where rowKey='201807935_4db2d4ff111a4e51bfcb6b404ab70586_1_477_1'").queryExecution.optimizedPlan.schemaString)
+
+    ss.sql("select rowKey from TEMP where dt>=20180401 and dt<=20180501 and model IS NULL").show()
+    StdIn.readLine()
+    System.exit(0)
+    //    df.filter(_.length > 54).show()
+    //    df.filter(_.length > 55).show()
+    //    df.filter(_.length > 56).show()
   }
 
 

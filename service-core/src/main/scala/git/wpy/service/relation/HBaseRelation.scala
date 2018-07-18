@@ -39,7 +39,7 @@ case class HBaseRelation(sqlContext: SQLContext,
                         ) extends BaseRelation {
   val columnFamilies = HBaseConstants.createColumnFamilies(schemaFile)
 
-  override def schema: StructType = StructType(Seq(StructField("rowKey", StringType)) ++ columnFamilies.map(col => StructField(col.qualifier, col.dataType)))
+  override val schema: StructType = StructType(Seq(StructField("rowKey", StringType)) ++ columnFamilies.map(col => StructField(col.qualifier, col.dataType)))
 }
 
 object HBaseConstants {

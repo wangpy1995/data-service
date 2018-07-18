@@ -7,17 +7,16 @@ import scala.reflect.ClassTag
 import scala.util.Random
 
 
-class NumberRangePartitioner(ranges: Array[Long], numPartition: Int, step: Long) extends Partitioner {
+class NumberRangePartitioner(ranges: Array[(Long, Long)], numPartition: Int, step: Long) extends Partitioner {
   private val num = (ranges.length + 1) * numPartition
-  private val min = ranges.min
-  private val r = numPartition
+  private val min = ranges.map(_._1).min
 
   override def numPartitions: Int = num
 
   override def getPartition(key: Any): Int = {
     val k = key.asInstanceOf[Long]
     val startOffset = ((k - min) / step) * numPartition
-    val pos = startOffset.toInt + Random.nextInt(r)
+    val pos = startOffset.toInt + Random.nextInt(numPartition)
     pos
   }
 }

@@ -1,0 +1,201 @@
+<?xml version="1.0"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one or more
+  contributor license agreements.  See the NOTICE file distributed with
+  this work for additional information regarding copyright ownership.
+  The ASF licenses this file to You under the Apache License, Version 2.0
+  (the "License"); you may not use this file except in compliance with
+  the License.  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+
+<configuration>
+    <property>
+    <name>dfs.namenode.http-address</name>
+    <value>hdh52:50070</value>
+  </property>
+  
+  
+    <!-- HA Setting -->
+  <!-- unique identifiers for each NameNode in the nameservice -->
+  <property>
+    <name>dfs.nameservices</name>
+    <value>SERVICE-HADOOP-013b26814e524277b86dacb4e6a30c37</value>
+  </property>
+  <property>
+    <name>dfs.ha.namenodes.SERVICE-HADOOP-013b26814e524277b86dacb4e6a30c37</name>
+    <value>hdh52,hdh61</value>
+  </property>
+  <!-- the fully-qualified RPC address for each NameNode to listen on -->
+    <property>
+    <name>dfs.namenode.rpc-address.SERVICE-HADOOP-013b26814e524277b86dacb4e6a30c37.hdh52</name>
+    <value>hdh52:8020</value>
+  </property>
+    <property>
+    <name>dfs.namenode.rpc-address.SERVICE-HADOOP-013b26814e524277b86dacb4e6a30c37.hdh61</name>
+    <value>hdh61:8020</value>
+  </property>
+  
+    <!-- the fully-qualified HTTP address for each NameNode to listen on -->
+    <property>
+    <name>dfs.namenode.http-address.SERVICE-HADOOP-013b26814e524277b86dacb4e6a30c37.hdh52</name>
+    <value>hdh52:50070</value>
+  </property>
+    <property>
+    <name>dfs.namenode.http-address.SERVICE-HADOOP-013b26814e524277b86dacb4e6a30c37.hdh61</name>
+    <value>hdh61:50070</value>
+  </property>
+        
+  <!-- the fully-qualified HTTPS address for each NameNode to listen on -->
+      
+  <!-- the location of the shared storage directory -->
+  <property>
+    <name>dfs.namenode.shared.edits.dir</name>
+    <value>qjournal://hdh52:8485;hdh172:8485;hdh61:8485/SERVICE-HADOOP-013b26814e524277b86dacb4e6a30c37</value>
+  </property>
+  <!-- the path where the JournalNode daemon will store its local state -->
+  <property>
+    <name>dfs.journalnode.edits.dir</name>
+    <value>/mnt/disk1/data/cluster001//SERVICE-HADOOP-013b26814e524277b86dacb4e6a30c37/jn</value>
+  </property>
+
+  <!-- the Java class that HDFS clients use to contact the Active NameNode -->
+  <property>
+    <name>dfs.client.failover.proxy.provider.SERVICE-HADOOP-013b26814e524277b86dacb4e6a30c37</name>
+    <value>org.apache.hadoop.hdfs.server.namenode.ha.ConfiguredFailoverProxyProvider</value>
+  </property>
+
+  <!-- run an arbitrary shell command to fence the Active NameNode -->
+  <property>
+    <name>dfs.ha.fencing.methods</name>
+    <value>shell(/bin/true)</value>
+  </property>
+
+  <property>
+    <name>dfs.ha.fencing.ssh.private-key-files</name>
+    <value>/root/.ssh/id_rsa</value>
+  </property>
+
+  <property>
+    <name>dfs.ha.fencing.ssh.connect-timeout</name>
+    <value>5000</value>
+  </property>
+
+  <!-- Automatic failover by the ZKFailoverController process -->
+  <property>
+    <name>dfs.ha.automatic-failover.enabled</name>
+    <value>True</value>
+  </property>
+  <property>
+    <name>ha.zookeeper.quorum</name>
+    <value>hdh52:2181,hdh172:2181,hdh61:2181</value>
+  </property>
+  
+  <property>
+    <name>dfs.datanode.data.dir</name>
+    <value>
+[DISK]file:///mnt/disk1/data/cluster001/SERVICE-HADOOP-013b26814e524277b86dacb4e6a30c37/dn,
+[SSD]file:///mnt/ssd1/data/cluster001/SERVICE-HADOOP-013b26814e524277b86dacb4e6a30c37/dn,
+[SSD]file:///mnt/ssd2/data/cluster001/SERVICE-HADOOP-013b26814e524277b86dacb4e6a30c37/dn,
+[SSD]file:///mnt/ssd3/data/cluster001/SERVICE-HADOOP-013b26814e524277b86dacb4e6a30c37/dn,
+[DISK]file:///mnt/disk2/data/cluster001/SERVICE-HADOOP-013b26814e524277b86dacb4e6a30c37/dn,
+[SSD]file:///mnt/ssd4/data/cluster001/SERVICE-HADOOP-013b26814e524277b86dacb4e6a30c37/dn,
+[SSD]file:///mnt/ssd5/data/cluster001/SERVICE-HADOOP-013b26814e524277b86dacb4e6a30c37/dn,
+[SSD]file:///mnt/ssd6/data/cluster001/SERVICE-HADOOP-013b26814e524277b86dacb4e6a30c37/dn
+    </value>
+  </property>
+
+      <property>
+      <name>dfs.datanode.max.xcievers</name>
+      <value>8192</value>
+    </property>
+      <property>
+      <name>dfs.replication</name>
+      <value>3</value>
+    </property>
+      <property>
+      <name>dfs.permissions</name>
+      <value>False</value>
+    </property>
+      <property>
+      <name>dfs.client.socket-timeout</name>
+      <value>600000</value>
+    </property>
+      <property>
+      <name>dfs.namenode.secondary.http-address</name>
+      <value>'localhost':50090</value>
+    </property>
+      <property>
+      <name>dfs.namenode.name.dir</name>
+      <value>/mnt/disk1/data/cluster001//SERVICE-HADOOP-013b26814e524277b86dacb4e6a30c37/nn</value>
+    </property>
+      <property>
+      <name>dfs.namenode.checkpoint.dir</name>
+      <value>/mnt/disk1/data/cluster001//SERVICE-HADOOP-013b26814e524277b86dacb4e6a30c37/snn</value>
+    </property>
+      <property>
+      <name>dfs.block.size</name>
+      <value>134217728</value>
+    </property>
+      <property>
+      <name>dfs.namenode.handler.count</name>
+      <value>256</value>
+    </property>
+      <property>
+      <name>dfs.datanode.handler.count</name>
+      <value>32</value>
+    </property>
+      <property>
+      <name>dfs.datanode.du.reserved</name>
+      <value>0</value>
+    </property>
+      <property>
+      <name>dfs.balance.bandwidthPerSec</name>
+      <value>1048576</value>
+    </property>
+      <property>
+      <name>dfs.datanode.max.transfer.threads</name>
+      <value>8192</value>
+    </property>
+      <property>
+      <name>dfs.datanode.fsdataset.volume.choosing.policy</name>
+      <value>org.apache.hadoop.hdfs.server.datanode.fsdataset.AvailableSpaceVolumeChoosingPolicy</value>
+    </property>
+      <property>
+      <name>dfs.datanode.available-space-volume-choosing-policy.balanced-space-threshold</name>
+      <value>10737418240</value>
+    </property>
+      <property>
+      <name>dfs.datanode.available-space-volume-choosing-policy.balanced-space-preference-fraction</name>
+      <value>0.75</value>
+    </property>
+      <property>
+      <name>dfs.webhdfs.enabled</name>
+      <value>True</value>
+    </property>
+      <property>
+      <name>dfs.checksum.type</name>
+      <value>CRC32</value>
+    </property>
+      <property>
+      <name>dfs.client.block.write.replace-datanode-on-failure.enable</name>
+      <value>True</value>
+    </property>
+      <property>
+      <name>dfs.client.block.write.replace-datanode-on-failure.policy</name>
+      <value>NEVER</value>
+    </property>
+      <property>
+      <name>dfs.storage.policy.enabled</name>
+      <value>True</value>
+    </property>
+    
+  </configuration>

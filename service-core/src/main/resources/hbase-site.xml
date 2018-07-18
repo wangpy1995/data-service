@@ -1,0 +1,135 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+<!--
+/**
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+-->
+<configuration>
+
+      <property>
+      <name>hbase.cluster.distributed</name>
+      <value>true</value>
+    </property>
+      <property>
+      <name>hbase.zookeeper.quorum</name>
+      <value>hdh52,hdh172,hdh61</value>
+    </property>
+      <property>
+      <name>hbase.zookeeper.property.clientPort</name>
+      <value>2181</value>
+    </property>
+      <property>
+      <name>hbase.rootdir</name>
+      <value>hdfs://SERVICE-HADOOP-013b26814e524277b86dacb4e6a30c37/hbase</value>
+    </property>
+      <property>
+      <name>hbase.master.port</name>
+      <value>6000</value>
+    </property>
+      <property>
+      <name>hbase.regionserver.handler.count</name>
+      <value>200</value>
+    </property>
+      <property>
+      <name>hfile.block.cache.size</name>
+      <value>0.15</value>
+    </property>
+      <property>
+      <name>hbase.regionserver.global.memstore.upperLimit</name>
+      <value>0.6</value>
+    </property>
+      <property>
+      <name>hbase.regionserver.global.memstore.lowerLimit</name>
+      <value>0.2</value>
+    </property>
+      <property>
+      <name>hbase.hregion.max.filesize</name>
+      <value>10737418240</value>
+    </property>
+      <property>
+      <name>hbase.regionserver.regionSplitLimit</name>
+      <value>2147483647</value>
+    </property>
+      <property>
+      <name>hbase.hregion.majorcompaction</name>
+      <value>86400000</value>
+    </property>
+      <property>
+      <name>hbase.hstore.blockingStoreFiles</name>
+      <value>100</value>
+    </property>
+      <property>
+      <name>hbase.hstore.compaction.max</name>
+      <value>20</value>
+    </property>
+      <property>
+      <name>hbase.hstore.compaction.min</name>
+      <value>3</value>
+    </property>
+      <property>
+      <name>hbase.regionserver.thread.compaction.small</name>
+      <value>1</value>
+    </property>
+      <property>
+      <name>hbase.regionserver.thread.compaction.large</name>
+      <value>3</value>
+    </property>
+      <property>
+      <name>hbase.hregion.memstore.flush.size</name>
+      <value>134217728</value>
+    </property>
+      <property>
+      <name>hbase.hregion.memstore.block.multiplier</name>
+      <value>10</value>
+    </property>
+      <property>
+      <name>hbase.master.loadbalance.bytable</name>
+      <value>true</value>
+    </property>
+      <property>
+      <name>hbase.thrift.minWorkerThreads</name>
+      <value>500</value>
+    </property>
+      <property>
+      <name>hbase.client.keyvalue.maxsize</name>
+      <value>-1</value>
+    </property>
+      <property>
+      <name>hbase.regionserver.msginterval</name>
+      <value>3000</value>
+    </property>
+      <property>
+      <name>hbase.regionserver.logroll.errors.tolerated</name>
+      <value>10000000</value>
+    </property>
+      <property>
+      <name>hbase.regionserver.logroll.period</name>
+      <value>864000000</value>
+    </property>
+      <property>
+      <name>hbase.rpc.timeout</name>
+      <value>3600000</value>
+    </property>
+      <property>
+      <name>hbase.client.scanner.timeout.period</name>
+      <value>3600000</value>
+    </property>
+  
+  
+    </configuration>

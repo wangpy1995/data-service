@@ -23,7 +23,7 @@ class PartitionerSuite extends FunSuite {
 
     val step = 3L * 24 * 3600 * 1000
     val len = (duration / step).toInt + 1
-    val arr = (0 until len) map (start + step * _) toArray
+    val arr = (0 until len) map (i => start + step * i -> (start + step + step * i)) toArray
     val numPartitions = 3
     val partitioner = new NumberRangePartitioner(arr, numPartitions, step)
 
@@ -32,12 +32,15 @@ class PartitionerSuite extends FunSuite {
     }.partitionBy(partitioner).values
     val parts = partitionedRDD.partitions
     val rdds = (0 until len).map(i => new PartialRDD(partitionedRDD, parts, i * numPartitions, numPartitions).cache())
-    rdds.foreach { rdd =>
-      println(rdd.count())
+    val lists = rdds.filter { rdd =>
+      val cnt = rdd.count()
+      println(cnt)
+      if (cnt == 0) rdd.unpersist()
       println("=================")
+      cnt != 0
     }
 
-    0 until 50 foreach (_ => println(rdds(Random.nextInt(len)).count()))
+    0 until 50 foreach (_ => println(lists(Random.nextInt(lists.size)).count()))
 
     StdIn.readLine()
   }

@@ -46,9 +46,3 @@ public class LoaderCreatorTest {
         System.out.println(a0.getClass().getName());
     }
 }
-
-class A {
-}
-
-class B extends A {
-}
