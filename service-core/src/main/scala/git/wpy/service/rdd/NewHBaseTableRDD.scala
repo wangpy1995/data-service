@@ -12,6 +12,8 @@ import org.apache.spark._
 import org.apache.spark.internal.Logging
 import org.apache.spark.rdd.NewHadoopRDD
 
+import scala.annotation.meta.param
+
 class NewHBaseTableRDD(sc: SparkContext, hbaseConf: Configuration)
   extends NewHadoopRDD(
     sc,
@@ -28,8 +30,8 @@ class NewHBaseTableRDD(sc: SparkContext, hbaseConf: Configuration)
   }
 }
 
-class HBaseCredentialUtil(@transient sc: SparkContext,
-                          @transient hbaseConf: Configuration) extends Serializable with Logging {
+class HBaseCredentialUtil(@(transient @param) sc: SparkContext,
+                          @(transient @param) hbaseConf: Configuration) extends Serializable with Logging {
 
   @transient var appliedCredentials = false
   @transient val job = Job.getInstance(hbaseConf)

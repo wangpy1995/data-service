@@ -1,11 +1,14 @@
 package git.wpy.format.vector;
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.channels.ReadableByteChannel;
+import java.nio.channels.WritableByteChannel;
 
 /**
  * Created by wangpengyu6 on 18-7-18.
  */
-public class OffHeapColumnVector {
+public class OffHeapColumnVector implements WritableByteChannel, ReadableByteChannel {
 
     /**
      * 指针
@@ -76,5 +79,34 @@ public class OffHeapColumnVector {
      */
     public void bulkPut(long rowId, byte[] values, int count) {
         OffHeapUtils.bulkPut(columnPtr, rowId, values, count);
+    }
+
+    public void bulkRead(ByteBuffer dst) {
+        OffHeapUtils.bulkRead(columnPtr, 0, dst);
+    }
+
+    @Override
+    public int read(ByteBuffer dst) throws IOException {
+        OffHeapUtils.bulkRead(columnPtr, 0, dst);
+        dst.rewind();
+        return dst.capacity();
+    }
+
+    @Override
+    public int write(ByteBuffer src) throws IOException {
+        src.rewind();
+        if (src.remaining() > 0)
+            OffHeapUtils.bulkPut(columnPtr, 0, src, 1);
+        return src.capacity();
+    }
+
+    @Override
+    public boolean isOpen() {
+        return columnPtr != 0;
+    }
+
+    @Override
+    public void close() throws IOException {
+
     }
 }

@@ -5,6 +5,7 @@ import org.apache.hadoop.hbase.util.Bytes;
 import org.junit.Test;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -26,12 +27,14 @@ public class SplitTest {
 
     @Test
     public void test() {
-        byte[] start = {'2', '0', '1', '8', '0', '3', Byte.MIN_VALUE};
-        byte[] stop = {'2', '0', '1', '8', '0', '6', Byte.MAX_VALUE};
+        byte[] start = {'2', '0', '1', '8', '0', '6', '0','4','5'};
+        byte[] stop = {'2', '0', '1', '8', '0', '6', '9','9','9'};
+        byte[][] res = Bytes.split(start, stop, false, 10);
         List<byte[]> list = new ArrayList<>();
         list.add(start);
         split(start, stop, 8, list);
         list.add(stop);
-        list.forEach(bytes -> System.out.println(Bytes.toString(bytes)));
+//        list.forEach(bytes -> System.out.println(Bytes.toString(bytes)));
+        Arrays.stream(res).forEach(bytes -> System.out.println(Bytes.toString(bytes)));
     }
 }

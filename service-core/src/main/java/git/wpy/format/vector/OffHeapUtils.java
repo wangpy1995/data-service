@@ -50,6 +50,8 @@ public class OffHeapUtils {
         setByteArray(ptr, rowId, value.getBytes());
     }
 
+    static native void bulkPut(long ptr, long rowId, ByteBuffer values, int count);
+
     static native void bulkPut(long ptr, long rowId, byte[] values, int count);
 
     static native void bulkPut(long ptr, long rowId, short[] values, int count);
@@ -63,6 +65,9 @@ public class OffHeapUtils {
     static native void bulkPut(long ptr, long rowId, float[] values, int count);
 
     static native void bulkPut(long ptr, long rowId, double[] values, int count);
+
+    static native void bulkRead(long ptr,long rowId,ByteBuffer dst);
+
 
     static native void freeColumn(long ptr);
 }

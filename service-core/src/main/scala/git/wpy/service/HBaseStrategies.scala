@@ -10,14 +10,15 @@ import org.apache.hadoop.hbase.mapreduce.{IdentityTableMapper, TableInputFormatB
 import org.apache.hadoop.hbase.util.Bytes
 import org.apache.hadoop.mapreduce.Job
 import org.apache.spark.rdd.RDD
-import org.apache.spark.sql.Strategy
+import org.apache.spark.sql.{SQLContext, Strategy}
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.expressions.{And, Attribute, AttributeMap, AttributeReference, AttributeSet, Cast, Contains, EndsWith, EqualTo, Expression, GenericInternalRow, GreaterThan, GreaterThanOrEqual, InSet, IsNotNull, IsNull, LessThan, LessThanOrEqual, Literal, NamedExpression, Or, StartsWith, UnsafeProjection}
 import org.apache.spark.sql.catalyst.planning.PhysicalOperation
 import org.apache.spark.sql.catalyst.plans.logical.LogicalPlan
 import org.apache.spark.sql.execution.datasources.LogicalRelation
 import org.apache.spark.sql.execution.metric.SQLMetrics
-import org.apache.spark.sql.execution.{LeafExecNode, ProjectExec, SparkPlan}
+import org.apache.spark.sql.execution.{LeafExecNode, ProjectExec, SparkPlan, UnaryExecNode}
+import org.apache.spark.sql.sources.BaseRelation
 import org.apache.spark.sql.types._
 import org.apache.spark.unsafe.types.UTF8String
 
@@ -27,6 +28,9 @@ object HBaseStrategy extends Strategy {
   override def apply(plan: LogicalPlan): Seq[SparkPlan] = plan match {
     case PhysicalOperation(projectList, filter, l@LogicalRelation(relation: HBaseRelation, output, _, _)) =>
       filterProject4HBase(relation, output, projectList, filter) :: Nil
+
+    case PhysicalOperation(_, _, l@LogicalRelation(relation: ArrowRelation, _, _, _)) =>
+      ArrowColumnarScanExec(relation.it, relation.schema.map(field => AttributeReference(field.name, field.dataType)())) :: Nil
 
     case _ => Nil
   }
@@ -53,6 +57,15 @@ object HBaseStrategy extends Strategy {
       val scan = HBaseTableScanExec(requestedColumns, relation, filters)
       ProjectExec(projectList, scan)
     }
+  }
+}
+
+case class ArrowRelation(@(transient@param) sqlContext: SQLContext, it: RDD[Iterator[InternalRow]], schema: StructType) extends BaseRelation
+
+
+case class ArrowColumnarScanExec(it: RDD[Iterator[InternalRow]], output: Seq[Attribute]) extends LeafExecNode {
+  override protected def doExecute(): RDD[InternalRow] = {
+    it.flatMap(r => r)
   }
 }
 
